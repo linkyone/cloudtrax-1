@@ -8,14 +8,14 @@ WORKDIR /opt/build/src
 
 RUN apk --update --no-cache add openssl ca-certificates
 
-ADD . /opt/build/src/cloudtrax
+ADD . /opt/build/src/github.com/ryanhatfield/cloudtrax
 
 # This runs as one command/layer, otherwise deleting and
 # cleaning up files wouldn't reduce the server file size.
 RUN apk add --update $BUILD_DEPS && \
     export GOPATH=/opt/build/ && \
     go get ./... && \
-    CGO_ENABLED=0 go build -o /opt/static/app cloudtrax/ctserver && \
+    CGO_ENABLED=0 go build -o /opt/static/app github.com/ryanhatfield/cloudtrax/ctserver && \
     apk del $DEL_BUILD_DEPS && \
     rm -rf /opt/build /var/cache/apk/*
 
