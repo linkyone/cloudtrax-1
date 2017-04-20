@@ -26,7 +26,8 @@ type Cloudtrax struct {
 
 func (ct *Cloudtrax) initializeDB() error {
 	if ct.DatabaseURI == "" {
-		return fmt.Errorf("DatabaseURI is required, and is not set.\nCLOUDTRAX_SERVER_DATABASEURI: %v", ct.DatabaseURI)
+		return fmt.Errorf("DatabaseURI is required, and is not set.\n"+
+			"CLOUDTRAX_SERVER_DATABASEURI: %v", ct.DatabaseURI)
 	}
 
 	db, err := gorm.Open("postgres", ct.DatabaseURI)
@@ -97,43 +98,6 @@ func (ct *Cloudtrax) handleAPRequest(w http.ResponseWriter, r *http.Request) {
 		log.Printf("error while handling Accounting Request response: %s\n", err.Error())
 	}
 }
-
-// func (ct *Cloudtrax) handleRestRequest(w http.ResponseWriter, r *http.Request) {
-// 	err := r.ParseForm()
-// 	if err != nil {
-// 		log.Printf("error while handling Rest Request: %s\n", err.Error())
-// 	}
-// 	parts := strings.Split(r.URL.Path, "/")
-// 	if len(parts) == 3 {
-// 		//list all users
-// 	} else if len(parts) > 3 {
-// 		var u *models.User
-// 		u, err = ct.GetUser(parts[3])
-// 		if err != nil {
-// 			return
-// 		}
-//
-// 		var j []byte
-// 		j, err := json.Marshal(*u)
-// 		if err != nil {
-// 			log.Printf("error while marshalling Rest Request: %s\n", err.Error())
-// 		}
-// 		fmt.Fprint(w, string(j))
-// 	}
-// }
-
-// func (ct *Cloudtrax) GetUser(uid string) (*models.User, error) {
-// 	db, err := gorm.Open("postgres", ct.DatabaseURI)
-// 	if err != nil {
-// 		return nil, err
-// 	}
-// 	defer db.Close()
-//
-// 	var user models.User
-// 	db.First(&user, "ID = ?", uid)
-//
-// 	return &user, nil
-// }
 
 func (ct *Cloudtrax) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	if strings.HasPrefix(r.URL.Path, "/auth") {
