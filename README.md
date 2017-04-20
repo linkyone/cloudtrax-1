@@ -49,3 +49,52 @@ $ heroku ps:scale web=1
 # External Documentation
 
 * Post about [PostgreSQL key/value storage](http://blog.creapptives.com/post/14062057061/the-key-value-store-everyone-ignored-postgresql)
+
+
+# Data models
+
+Here's an example of the top level data object being offered by the API. Some
+nested objects will have their own endpoints, but all data should be associated
+with a user some how.
+
+```json
+{
+  "users": [
+    {
+      "id": "{{GUID}}",
+      "createdAt": "{{JS representation of date created, example: '2012-04-23T18:25:43.511Z'}}",
+      "deletedAt": "{{JS representation of date deleted, example: '2012-04-23T18:25:43.511Z'}}",
+      "email" : "{{first email used to sign up with the wifi system}}",
+      "firstName" : "{{first name string}}",
+      "lastName" : "{{first name string}}",
+      "username": "{{generated for the first time from email (most likely)}}"
+      "accounts": [
+        {
+          "id": "{{GUID}}",
+          "externalId": "{{The SSO service identifier for this account}}",
+          "createdAt": "{{JS representation of date created, example: '2012-04-23T18:25:43.511Z'}}",
+          "deletedAt": "{{JS representation of date deleted, example: '2012-04-23T18:25:43.511Z'}}",
+          "type": "{{Twitter/Facebook/Google/Microsoft/etc.}}",
+          "meta": {
+            "{{key}}": "{{most SSO types offer key-value pair values for account information, can be JSONP?}}"
+          }
+        }
+      ],
+      "sessions": [
+        {
+          "id": "{{AP generated Session ID}}",
+          "createdAt": "{{JS representation of date, example: '2012-04-23T18:25:43.511Z'}}",
+          "nodes": ["{{An array of mac addresses}}"],
+          "devices": ["{{An array of mac addresses}}"],
+          "ipAddresses": ["{{An array of IPv4 IP addresses}}"],
+          "downloadTotal": "{{int32 value for total download}}",
+          "uploadTotal": "{{int32 value for total download}}",
+          "seconds": "{{int32 total number of seconds the session is alive for}}",
+          "timeoutSeconds": "{{int32 default timeout seconds for the session}}"
+        }
+      ]
+    }
+  ]
+}
+
+```
