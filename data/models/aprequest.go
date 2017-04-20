@@ -1,4 +1,4 @@
-package accesspoints
+package models
 
 import "net/url"
 

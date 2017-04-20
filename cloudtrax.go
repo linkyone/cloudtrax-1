@@ -5,12 +5,15 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"strings"
 
 	"github.com/jinzhu/gorm"
-	"github.com/ryanhatfield/cloudtrax/models"
-	"github.com/ryanhatfield/cloudtrax/models/accesspoints"
+	//This is required for the postgres driver within gorm
+	_ "github.com/jinzhu/gorm/dialects/postgres"
+	"github.com/ryanhatfield/cloudtrax/data/models"
 )
 
+//Cloudtrax holds information about connecting with cloudtrax APs
 type Cloudtrax struct {
 	Address        string
 	Secret         string
@@ -28,7 +31,7 @@ func (ct *Cloudtrax) initializeDB() error {
 
 	db, err := gorm.Open("postgres", ct.DatabaseURI)
 	if err != nil {
-		return fmt.Errorf("Unable to connect to database.\nError:\n%+v", err)
+		return fmt.Errorf("Unable to connect to database.\nError:\n%s", err.Error())
 	}
 	defer db.Close()
 
@@ -37,37 +40,50 @@ func (ct *Cloudtrax) initializeDB() error {
 	return nil
 }
 
+func (ct *Cloudtrax) logAccounting(req models.APRequest) {
+
+}
+
 // ListenAndServe sets up and starts the service
 func (ct *Cloudtrax) ListenAndServe() error {
 	err := ct.initializeDB()
 	if err != nil {
 		return err
 	}
+
 	return http.ListenAndServe(ct.Address, ct)
 }
 
-func (ct *Cloudtrax) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+func (ct *Cloudtrax) handleAPRequest(w http.ResponseWriter, r *http.Request) {
+	db, err := gorm.Open("postgres", ct.DatabaseURI)
+	if err != nil {
+		log.Println("error connecting with database")
+		return
+	}
+	defer db.Close()
 
-	err := r.ParseForm()
+	err = r.ParseForm()
 	if err != nil {
 		log.Println("error parsing request form")
 		return
 	}
 
-	request := accesspoints.ParseRequest(&r.Form)
-	response := accesspoints.APResponse{
+	request := models.ParseRequest(&r.Form)
+	response := models.APResponse{
 		Request: &request,
 	}
 
 	switch request.RequestType {
-	case accesspoints.AccountingRequest:
-		response.ResponseCode = accesspoints.OKCode
-	case accesspoints.StatusRequest:
-		response.ResponseCode = accesspoints.RejectCode
+	case models.AccountingRequest:
+		response.ResponseCode = models.OKCode
+		//start with a goroutine, so you don't hold up the response
+		go ct.logAccounting(request)
+	case models.StatusRequest:
+		response.ResponseCode = models.RejectCode
 		response.BlockedMessage = "Your session has expired."
-	case accesspoints.LoginRequest:
+	case models.LoginRequest:
 		//TODO: Check login credentials here
-		response.ResponseCode = accesspoints.AcceptCode
+		response.ResponseCode = models.AcceptCode
 		response.Seconds = 3600
 		response.Download = 2000
 		response.Upload = 800
@@ -78,6 +94,60 @@ func (ct *Cloudtrax) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 	err = response.Execute(&w)
 	if err != nil {
-		log.Printf("error while handling Accounting Request response: %v\n", err)
+		log.Printf("error while handling Accounting Request response: %s\n", err.Error())
 	}
+}
+
+// func (ct *Cloudtrax) handleRestRequest(w http.ResponseWriter, r *http.Request) {
+// 	err := r.ParseForm()
+// 	if err != nil {
+// 		log.Printf("error while handling Rest Request: %s\n", err.Error())
+// 	}
+// 	parts := strings.Split(r.URL.Path, "/")
+// 	if len(parts) == 3 {
+// 		//list all users
+// 	} else if len(parts) > 3 {
+// 		var u *models.User
+// 		u, err = ct.GetUser(parts[3])
+// 		if err != nil {
+// 			return
+// 		}
+//
+// 		var j []byte
+// 		j, err := json.Marshal(*u)
+// 		if err != nil {
+// 			log.Printf("error while marshalling Rest Request: %s\n", err.Error())
+// 		}
+// 		fmt.Fprint(w, string(j))
+// 	}
+// }
+
+// func (ct *Cloudtrax) GetUser(uid string) (*models.User, error) {
+// 	db, err := gorm.Open("postgres", ct.DatabaseURI)
+// 	if err != nil {
+// 		return nil, err
+// 	}
+// 	defer db.Close()
+//
+// 	var user models.User
+// 	db.First(&user, "ID = ?", uid)
+//
+// 	return &user, nil
+// }
+
+func (ct *Cloudtrax) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+	if strings.HasPrefix(r.URL.Path, "/auth") {
+		log.Printf("Handling auth call: %s", r.URL.Path)
+		ct.handleAPRequest(w, r)
+		return
+	} else if strings.HasPrefix(r.URL.Path, "/rest") {
+		log.Printf("Handling rest call: %s", r.URL.Path)
+		//ct.handleRestRequest(w, r)
+		return
+	} else if strings.HasPrefix(r.URL.Path, "/favicon.ico") {
+		//Let's just eat this one, it's annoying
+		return
+	}
+	//else
+	log.Printf("Unknown endpoint: %s", r.URL.Path)
 }
