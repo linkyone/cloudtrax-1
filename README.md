@@ -67,7 +67,7 @@ with a user some how.
       "email" : "{{first email used to sign up with the wifi system}}",
       "firstName" : "{{first name string}}",
       "lastName" : "{{first name string}}",
-      "username": "{{generated for the first time from email (most likely)}}"
+      "username": "{{generated for the first time from email (most likely)}}",
       "accounts": [
         {
           "id": "{{GUID}}",
