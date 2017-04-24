@@ -25,8 +25,9 @@ type APRequest struct {
 	Upload               string
 }
 
-func ParseRequest(v *url.Values) APRequest {
-	return APRequest{
+//NewAPRequest takes a key/value pair array, and turns it into an APRequest
+func NewAPRequest(v *url.Values) *APRequest {
+	return &APRequest{
 		RequestType:          v.Get("type"),
 		RequestAuthorization: v.Get("ra"),
 		MacAddress:           v.Get("mac"),

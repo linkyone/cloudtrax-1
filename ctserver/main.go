@@ -5,29 +5,20 @@ import (
 	"os"
 
 	"github.com/ryanhatfield/cloudtrax"
+	"github.com/ryanhatfield/cloudtrax/data/models"
 )
 
 func main() {
 	fmt.Println("Cloudtrax AP Server Starting")
 
-	env := func(n, d string) string {
-		//use the name and the default value to return an environment variable
-		v := os.Getenv(n)
-		if v == "" {
-			return d
-		}
-		return v
-	}
-
-	ct := cloudtrax.Cloudtrax{
-		Secret:      env("CLOUDTRAX_SERVER_SECRET", "default"),
-		Address:     env("CLOUDTRAX_SERVER_ADDRESS", ":8080"),
-		DatabaseURI: env("CLOUDTRAX_SERVER_DATABASEURI", ""),
-	}
+	ct := cloudtrax.NewCloudtrax(models.NewEnvironment())
 
 	err := ct.ListenAndServe()
-	if err != nil {
-		fmt.Println(err)
-	}
 	fmt.Println("Cloudtrax AP Server Shutting Down")
+	if err != nil {
+		fmt.Printf("Error while exiting:\n%s", err.Error())
+		os.Exit(1)
+	} else {
+		os.Exit(0)
+	}
 }

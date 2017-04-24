@@ -53,17 +53,6 @@ func (apr *APResponse) Execute(w *http.ResponseWriter) error {
 		return err
 	}
 
-	// Set some sanity defaults
-	if apr.Seconds == 0 {
-		apr.Seconds = 3600
-	}
-	if apr.Download == 0 {
-		apr.Download = 2000
-	}
-	if apr.Upload == 0 {
-		apr.Upload = 800
-	}
-
 	//Execute the response template, and write to the response
 	err = t.Execute(*w, *apr)
 	if err != nil {
@@ -96,4 +85,25 @@ func generateRA(code string, ra string, secret string) (string, error) {
 			"An error has occured while writing to the md5 hasher.\n %s", err.Error())
 	}
 	return hex.EncodeToString(hasher.Sum(nil)), nil
+}
+
+//NewAPResponse generates a new APResponse from the APRequest
+func NewAPResponse(req *APRequest) *APResponse {
+	res := &APResponse{Request: req}
+	switch req.RequestType {
+	case AccountingRequest:
+		res.ResponseCode = OKCode
+	case StatusRequest:
+		res.ResponseCode = RejectCode
+		res.BlockedMessage = "Your session has expired."
+	case LoginRequest:
+		//TODO: Check login credentials here
+		res.ResponseCode = AcceptCode
+		res.Seconds = 3600
+		res.Download = 2000
+		res.Upload = 800
+	default:
+		panic(fmt.Errorf("Error: %v, URL: %v", "incorrect request type", req.RequestType))
+	}
+	return res
 }

@@ -1,6 +1,14 @@
 package models
 
+//Session holds information about a WiFi user's session
 type Session struct {
-	SessionID string `gorm:"primary_key:true"`
-	UserID    string
+	SessionID       uint `gorm:"primary_key:true;AUTO_INCREMENT"`
+	Session         string
+	FirstNode       string
+	LatestNode      string
+	FirstIPAddress  string
+	LatestIPAddress string
+	TotalDownload   uint
+	TotalUpload     uint
+	Authorizations  []Authorization `gorm:"ForeignKey:AuthorizationID"`
 }

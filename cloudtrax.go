@@ -1,15 +1,11 @@
 package cloudtrax
 
 import (
-	"database/sql"
-	"fmt"
 	"log"
 	"net/http"
 	"strings"
 
-	"github.com/jinzhu/gorm"
-	//This is required for the postgres driver within gorm
-	_ "github.com/jinzhu/gorm/dialects/postgres"
+	"github.com/ryanhatfield/cloudtrax/data"
 	"github.com/ryanhatfield/cloudtrax/data/models"
 )
 
@@ -20,25 +16,7 @@ type Cloudtrax struct {
 	SessionSeconds int
 	DownloadLimit  int
 	UploadLimit    int
-	DatabaseURI    string
-	db             *sql.DB
-}
-
-func (ct *Cloudtrax) initializeDB() error {
-	if ct.DatabaseURI == "" {
-		return fmt.Errorf("DatabaseURI is required, and is not set.\n"+
-			"CLOUDTRAX_SERVER_DATABASEURI: %v", ct.DatabaseURI)
-	}
-
-	db, err := gorm.Open("postgres", ct.DatabaseURI)
-	if err != nil {
-		return fmt.Errorf("Unable to connect to database.\nError:\n%s", err.Error())
-	}
-	defer db.Close()
-
-	db.AutoMigrate(&models.User{})
-
-	return nil
+	env            *models.Environment
 }
 
 func (ct *Cloudtrax) logAccounting(req models.APRequest) {
@@ -47,51 +25,45 @@ func (ct *Cloudtrax) logAccounting(req models.APRequest) {
 
 // ListenAndServe sets up and starts the service
 func (ct *Cloudtrax) ListenAndServe() error {
-	err := ct.initializeDB()
-	if err != nil {
-		return err
-	}
-
 	return http.ListenAndServe(ct.Address, ct)
 }
 
-func (ct *Cloudtrax) handleAPRequest(w http.ResponseWriter, r *http.Request) {
-	db, err := gorm.Open("postgres", ct.DatabaseURI)
-	if err != nil {
-		log.Println("error connecting with database")
-		return
+func (ct *Cloudtrax) handleAPIRequest(w http.ResponseWriter, r *http.Request) {
+	if strings.HasPrefix(r.URL.Path, "/api/sessions") {
+		if strings.HasPrefix(r.URL.Path, "/api/sessions/authorize") {
+			a, err := models.NewAuthorization(r.Form)
+			if err != nil {
+				log.Printf("error occured while handling a session authorization request:\n%s", err.Error())
+			}
+			data, derr := data.NewData(ct.env)
+			if derr != nil {
+				log.Printf("error occured while handling a session authorization request:\n%s", derr.Error())
+			}
+		}
 	}
-	defer db.Close()
+}
 
-	err = r.ParseForm()
+func (ct *Cloudtrax) handleAPRequest(w http.ResponseWriter, r *http.Request) {
+	err := r.ParseForm()
 	if err != nil {
 		log.Println("error parsing request form")
 		return
 	}
 
-	request := models.ParseRequest(&r.Form)
-	response := models.APResponse{
-		Request: &request,
-	}
+	request := models.NewAPRequest(&r.Form)
+	response := models.NewAPResponse(request)
 
-	switch request.RequestType {
-	case models.AccountingRequest:
-		response.ResponseCode = models.OKCode
-		//start with a goroutine, so you don't hold up the response
-		go ct.logAccounting(request)
-	case models.StatusRequest:
-		response.ResponseCode = models.RejectCode
-		response.BlockedMessage = "Your session has expired."
-	case models.LoginRequest:
-		//TODO: Check login credentials here
-		response.ResponseCode = models.AcceptCode
-		response.Seconds = 3600
-		response.Download = 2000
-		response.Upload = 800
-	default:
-		log.Printf("Error: %v, URL: %v", "incorrect request type", r.URL)
-		return
-	}
+	go func(req models.APRequest, res models.APResponse) {
+		//log the AP request and responses
+		data, derr := data.NewData(ct.env)
+		if derr != nil {
+			log.Printf("error occured while logging the request:\n%s", derr.Error())
+		}
+		derr = data.SaveRequest(request)
+		if derr != nil {
+			log.Printf("error occured while logging the request:\n%s", derr.Error())
+		}
+	}(*request, *response)
 
 	err = response.Execute(&w)
 	if err != nil {
@@ -104,9 +76,9 @@ func (ct *Cloudtrax) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		log.Printf("Handling auth call: %s", r.URL.Path)
 		ct.handleAPRequest(w, r)
 		return
-	} else if strings.HasPrefix(r.URL.Path, "/rest") {
-		log.Printf("Handling rest call: %s", r.URL.Path)
-		//ct.handleRestRequest(w, r)
+	} else if strings.HasPrefix(r.URL.Path, "/api") {
+		log.Printf("Handling api call: %s", r.URL.Path)
+		ct.handleAPIRequest(w, r)
 		return
 	} else if strings.HasPrefix(r.URL.Path, "/favicon.ico") {
 		//Let's just eat this one, it's annoying
@@ -114,4 +86,9 @@ func (ct *Cloudtrax) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	}
 	//else
 	log.Printf("Unknown endpoint: %s", r.URL.Path)
+}
+
+//NewCloudtrax initializes and returns a new cloudtrax object
+func NewCloudtrax(env *models.Environment) *Cloudtrax {
+	return &Cloudtrax{env: new(models.Environment)}
 }
