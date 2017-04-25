@@ -1,26 +1,22 @@
-# Project status
+# Environment Variables
 
-Currently, the project runs locally, inside docker, and on Heroku. All session requests are denied, and any valid login request is allowed. The `CLOUDTRAX_SECRET` environemnt variable is all that is needed to get a working server running (defaults to `default`).
+Everything in the server is configured with environment variables from the
+hosted system. If this is Heroku, Environment Variables are saved in the app
+settings section of the online dashboard. If this app is running locally, all
+variables are pulled from the current environment. All variables are prefixed
+with `CLOUDTRAX_SERVER_`, but not included in the variable name below for
+brevity.
 
-# Communications
+| Name          | Required | Description                                      |
+| ------------- | -------- | ------------------------------------------------ |
+| `PORT`        | YES      | The port number for the server to run on [^1]    |
+| `DATABASEURI` | YES      | A complete and valid Postgres connection URI     |
+| `SECRET`      | NO       | A salt used for communication with the APs       |
+| `DEBUG`       | NO       | Default: `FALSE`, enables debug output [^2]      |
 
-The communication with the server happens in one of 3 ways,
-
-1. Between the Access Point and the server on page `/auth.html`.
-2. A single `GET` endpoint to authorize user devices.
-3. A callback system, to push data usage messages to an external server.
-
-## Access Point Communications
-
-## Authorization Endpoint
-
-The authorize endpoint accepts an authorized UID, authorization time (in minutes),
-
-##### Example flow:
-
-The user is redirected to the login page. This can either be external or internal, but must retrieve a valid Session ID from the login form
-
-# Running server
+Notes:
+[^1]: This defaults to `PORT` without the `CLOUDTRAX_SERVER_` prefix when running on Heroku
+[^2]: This can cause undue server load, as it enables debug mode with the underlying SQL library.
 
 * Run the server with the following command:<br>
 `docker run -itp 8080:8080 $(docker build -q .)`
