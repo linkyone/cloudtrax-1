@@ -45,6 +45,14 @@ func (d data) Ping() error {
 }
 
 func (d data) AuthorizeSession(session string, a models.Authorization) error {
+	db, err := d.open()
+	if err != nil {
+		return err
+	}
+	defer db.Close()
+
+	var dbSession = &models.Session{}
+	db.First(dbSession, models.Session{Session: session})
 	return nil
 }
 

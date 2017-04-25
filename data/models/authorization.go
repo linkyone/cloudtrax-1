@@ -30,8 +30,7 @@ func NewAuthorization(v url.Values) (*Authorization, error) {
 	var err error
 
 	apr := &Authorization{
-		SessionID: get("sessionID", "", true),
-		Device:    get("device", "", true),
+		Device: get("device", "", true),
 	}
 	apr.ExpirationTime, err = time.Parse("Mon Jan 2 15:04:05 -0700 CST 2006", get("expirationTime", "", true))
 	if err != nil {
