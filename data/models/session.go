@@ -4,7 +4,7 @@ package models
 type Session struct {
 	SessionID       uint `gorm:"primary_key:true;AUTO_INCREMENT"`
 	Session         string
-	FirstNode       string
+	RequestingNode  string
 	LatestNode      string
 	FirstIPAddress  string
 	LatestIPAddress string

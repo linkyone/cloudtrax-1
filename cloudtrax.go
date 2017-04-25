@@ -39,6 +39,7 @@ func (ct *Cloudtrax) handleAPIRequest(w http.ResponseWriter, r *http.Request) {
 			if derr != nil {
 				log.Printf("error occured while handling a session authorization request:\n%s", derr.Error())
 			}
+			data.AuthorizeSession("test", *a)
 		}
 	}
 }
