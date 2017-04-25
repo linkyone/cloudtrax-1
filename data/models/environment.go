@@ -7,7 +7,7 @@ import (
 
 //Environment holds information about the current environment
 type Environment struct {
-	Address     string //CLOUDTRAX_SERVER_ADDRESS
+	Port        string //CLOUDTRAX_SERVER_PORT
 	DatabaseURI string //CLOUDTRAX_SERVER_DATABASEURI
 	Secret      string //CLOUDTRAX_SERVER_SECRET
 	Debug       bool   //CLOUDTRAX_SERVER_DEBUG
@@ -23,7 +23,7 @@ func (env *Environment) Parse() {
 		}
 		return v
 	}
-	env.Address = getEnv("CLOUDTRAX_SERVER_ADDRESS", ":8080")
+	env.Port = getEnv("CLOUDTRAX_SERVER_PORT", "8080")
 	env.DatabaseURI = getEnv("CLOUDTRAX_SERVER_DATABASEURI", "")
 	env.Secret = getEnv("CLOUDTRAX_SERVER_SECRET", "default")
 	env.Debug, _ = strconv.ParseBool(getEnv("CLOUDTRAX_SERVER_DEBUG", "false"))
