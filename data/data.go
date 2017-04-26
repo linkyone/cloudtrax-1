@@ -57,7 +57,7 @@ func (d data) SaveAPRequest(req models.APRequest, site string) error {
 	}
 
 	//update info
-	log.Println("Saving sessoin")
+	log.Println("Saving session")
 	session.IPv4 = req.IPV4Address
 	if req.RequestType == models.AccountingRequest {
 		getint := func(s string) uint {
