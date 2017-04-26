@@ -39,8 +39,8 @@ $ heroku ps:scale web=1
 
 # Routes
 
-| Route | Description | Example |
-| ----- | ----------- | ------- |
-| `/:site/auth.html` | Main authorization endpoint for the access point. This should be entered in the admin interface for each site, including a predetermined site name. | `/joescoffee/auth.html` |
-| `/:site/sessions/:session/:device` | Return a single session from the server, by site name and session token | `/joescoffee/01234567/01:02:03:04:05:06/` |
-| `/:site/sessions/:session/:device/authorize` | Authorize a session, returns HTTP OK if accepted. | `/joescoffee/01234567/01:02:03:04:05:06/authorize` |
+| Route | Description |
+| ----- | ----------- |
+| `/:site/auth.html`<br />(`/joescoffee/auth.html`) | Main authorization endpoint for the access point. This should be entered in the admin interface for each site, including a predetermined site name. |
+| `/:site/sessions/:session/:device`<br />(`/joescoffee/01234567/01:02:03:04:05:06/`) | Return a single session from the server, by site name and session token |
+| `/:site/sessions/:session/:device/authorize`<br />(`/joescoffee/01234567/01:02:03:04:05:06/authorize`) | Authorize a session, returns HTTP OK if accepted. |
