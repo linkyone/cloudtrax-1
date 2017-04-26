@@ -28,7 +28,7 @@ func (env *Environment) Parse() {
 	env.DatabaseURI = getEnv("CLOUDTRAX_SERVER_DATABASEURI", "")
 	env.Secret = getEnv("CLOUDTRAX_SERVER_SECRET", "default")
 	env.Debug, _ = strconv.ParseBool(getEnv("CLOUDTRAX_SERVER_DEBUG", "false"))
-	dbConnections, _ := strconv.ParseInt(getEnv("CLOUDTRAX_SERVER_MAXDBCONNECTIONS", "7"), 0, 32)
+	dbConnections, _ := strconv.ParseInt(getEnv("CLOUDTRAX_SERVER_MAXDBCONNECTIONS", "20"), 0, 32)
 	env.MaxDatabaseConnections = int(dbConnections)
 }
 
