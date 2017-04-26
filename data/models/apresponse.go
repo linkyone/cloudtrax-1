@@ -47,8 +47,6 @@ func (apr *APResponse) Execute(w *http.ResponseWriter) error {
 	//Pull in our template
 	t := template.Must(template.New("response").Parse(responseTemplate))
 
-	//Get the new response authorization
-	apr.ResponseAuthorization, err = generateRA(apr.ResponseCode, apr.Request.RequestAuthorization, apr.Secret)
 	if err != nil {
 		return err
 	}
@@ -63,10 +61,10 @@ func (apr *APResponse) Execute(w *http.ResponseWriter) error {
 	return nil
 }
 
-//generateRA takes the response CODE, the (un-decoded) RA field, and the site secret,
+//GenerateRA takes the response CODE, the (un-decoded) RA field, and the site secret,
 //and generates the Response Authentication token.
 //NOTE: I don't like this method, it will be updated/changed/mamed at some point.
-func generateRA(code string, ra string, secret string) (string, error) {
+func GenerateRA(code string, ra string, secret string) (string, error) {
 	var buffer bytes.Buffer
 	var err error
 	hasher := md5.New()

@@ -4,24 +4,27 @@ import (
 	"fmt"
 
 	"github.com/jinzhu/gorm"
-	"github.com/ryanhatfield/cloudtrax/data/models"
 	//This is required for the postgres driver within gorm
 	_ "github.com/jinzhu/gorm/dialects/postgres"
+
+	"github.com/ryanhatfield/cloudtrax/data/models"
 )
 
-//Data holds information about the database
+//Data holds information and methods about the datastorage
 type Data interface {
+	//Ping verifies that the database is available
 	Ping() error
-	AuthorizeSession(session string, a models.Authorization) error
-	IsSessionAuthorized(sessionID string, deviceMac string) (bool, error)
-	SaveRequest(req *models.APRequest) error
+	//FindSession returns a Session object from the provided site and session IDs
+	FindSession(session, site, device string) (*models.Session, error)
+	//UpdateSession attempts to insert or update the Session as needed
+	UpdateSession(session models.Session) error
 }
 
 type data struct {
 	Env *models.Environment
 }
 
-func (d data) open() (*gorm.DB, error) {
+func (d data) openDB() (*gorm.DB, error) {
 	db, err := gorm.Open("postgres", d.Env.DatabaseURI)
 	if err != nil {
 		return nil, err
@@ -32,99 +35,58 @@ func (d data) open() (*gorm.DB, error) {
 	return db, nil
 }
 
-func (d data) Ping() error {
-	db, err := d.open()
-	if err != nil {
-		return err
-	}
-	err = db.Close()
-	if err != nil {
-		return err
-	}
-	return nil
-}
-
-func (d data) AuthorizeSession(session string, a models.Authorization) error {
-	db, err := d.open()
-	if err != nil {
-		return err
-	}
-	defer db.Close()
-
-	var dbSession = &models.Session{}
-	db.First(dbSession, models.Session{Session: session})
-	return nil
-}
-
-func (d data) SaveRequest(req *models.APRequest) error {
-	db, err := d.open()
-	if err != nil {
-		return err
-	}
-	defer db.Close()
-
-	var s = &models.Session{}
-	db.First(s, models.Session{Session: req.Session})
-	if s == nil {
-
-	}
-
-	switch req.RequestType {
-	case models.StatusRequest:
-
-		break
-	case models.LoginRequest:
-		break
-	case models.AccountingRequest:
-		break
-	}
-
-	return nil
-}
-
-// //UpdateSession updates the session information in the DB
-// func (d data) UpdateSession(s *models.Session) error {
-// 	db, err := d.open()
-// 	if err != nil {
-// 		return err
-// 	}
-// 	defer db.Close()
-// 	db.FirstOrCreate(s, models.Session{Session: s.Session})
-// 	t := time.Now()
-// 	s.Authorizations = append(s.Authorizations, models.Authorization{Device: "00:01:02:03:04", ExpirationTime: t})
-// 	db.Save(s)
-//
-// 	log.Printf("Session Object from DB:\n%v", *s)
-// 	return nil
-// }
-
-func (d data) AddAuthorization(sessionID string, a *models.Authorization) error {
-	return nil
-}
-
-func (d data) IsSessionAuthorized(sessionID string, deviceMac string) (bool, error) {
-	//Check the database for sessions already authorized
-	db, err := d.open()
-	if err != nil {
-		return false, err
-	}
-	err = db.Close()
-	if err != nil {
-		return false, err
-	}
-
-	return false, nil
-}
-
 func (d data) initializeDB() error {
-	db, err := d.open()
+	db, err := d.openDB()
 	if err != nil {
 		return fmt.Errorf("Unable to connect to database.\nError:\n%s", err.Error())
 	}
 	defer db.Close()
 
 	db.AutoMigrate(&models.Session{})
-	db.AutoMigrate(&models.Authorization{})
+
+	return nil
+}
+
+func (d data) Ping() error {
+	db, err := d.openDB()
+	if err != nil {
+		return err
+	}
+	err = db.Close()
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func (d data) FindSession(ses, sit, dev string) (*models.Session, error) {
+	if ses == "" {
+		return nil, fmt.Errorf("session id invalid:%s", ses)
+	}
+	session := &models.Session{}
+
+	db, err := d.openDB()
+	if err != nil {
+		return nil, err
+	}
+	defer db.Close()
+
+	db.First(session, models.Session{Session: ses, Site: sit, Device: dev})
+	if err != nil {
+		return nil, err
+	}
+
+	if session.Session != ses {
+		return nil, nil
+	}
+
+	return session, nil
+}
+
+func (d data) UpdateSession(session models.Session) error {
+	if session.Session == "" {
+		return fmt.Errorf("session can't be nil")
+	}
 
 	return nil
 }

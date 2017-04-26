@@ -36,3 +36,11 @@ $ heroku ps:scale web=1
 # External Documentation
 
 * Post about [PostgreSQL key/value storage](http://blog.creapptives.com/post/14062057061/the-key-value-store-everyone-ignored-postgresql)
+
+# Routes
+
+| Route | Description | Example |
+| ----- | ----------- | ------- |
+| `/:site/auth.html` | Main authorization endpoint for the access point. This should be entered in the admin interface for each site, including a predetermined site name. | `/joescoffee/auth.html` |
+| `/:site/sessions/:session/:device` | Return a single session from the server, by site name and session token | `/joescoffee/01234567/01:02:03:04:05:06/` |
+| `/:site/sessions/:session/:device/authorize` | Authorize a session, returns HTTP OK if accepted. | `/joescoffee/01234567/01:02:03:04:05:06/authorize` |
