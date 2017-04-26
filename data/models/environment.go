@@ -7,10 +7,11 @@ import (
 
 //Environment holds information about the current environment
 type Environment struct {
-	Port        string //CLOUDTRAX_SERVER_PORT
-	DatabaseURI string //CLOUDTRAX_SERVER_DATABASEURI
-	Secret      string //CLOUDTRAX_SERVER_SECRET
-	Debug       bool   //CLOUDTRAX_SERVER_DEBUG
+	Port                   string //CLOUDTRAX_SERVER_PORT
+	DatabaseURI            string //CLOUDTRAX_SERVER_DATABASEURI
+	Secret                 string //CLOUDTRAX_SERVER_SECRET
+	Debug                  bool   //CLOUDTRAX_SERVER_DEBUG
+	MaxDatabaseConnections int    //CLOUDTRAX_SERVER_MAXDBCONNECTIONS
 }
 
 //Parse gets environment variables from the system
@@ -27,11 +28,13 @@ func (env *Environment) Parse() {
 	env.DatabaseURI = getEnv("CLOUDTRAX_SERVER_DATABASEURI", "")
 	env.Secret = getEnv("CLOUDTRAX_SERVER_SECRET", "default")
 	env.Debug, _ = strconv.ParseBool(getEnv("CLOUDTRAX_SERVER_DEBUG", "false"))
+	dbConnections, _ := strconv.ParseInt(getEnv("CLOUDTRAX_SERVER_MAXDBCONNECTIONS", "7"), 0, 32)
+	env.MaxDatabaseConnections = int(dbConnections)
 }
 
 //NewEnvironment initializes and returns a new environment object
-func NewEnvironment() *Environment {
-	env := &Environment{}
+func NewEnvironment() Environment {
+	env := Environment{}
 	env.Parse()
 	return env
 }

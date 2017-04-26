@@ -13,7 +13,8 @@ import (
 
 //Cloudtrax holds information about connecting with cloudtrax APs
 type Cloudtrax struct {
-	Env *models.Environment
+	Env  *models.Environment
+	Data data.Data
 }
 
 func logInterface(i interface{}) {
@@ -43,13 +44,7 @@ func (ct *Cloudtrax) getSession(w http.ResponseWriter, r *http.Request, p httpro
 		http.Error(w, fmt.Errorf("request invalid").Error(), http.StatusBadRequest)
 	}
 
-	data, err := data.NewData(ct.Env)
-	if err != nil {
-		log.Println("error occured while getting data object")
-	}
-
-	var session *models.Session
-	session, err = data.FindSession(ses, sit, dev)
+	session, err := ct.Data.FindSession(ses, sit, dev)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
@@ -83,7 +78,7 @@ func (ct *Cloudtrax) authorizeSession(w http.ResponseWriter, r *http.Request, p 
 	}
 }
 
-func (ct *Cloudtrax) handleAPRequest(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
+func (ct *Cloudtrax) handleAPRequest(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
 	err := r.ParseForm()
 	if err != nil {
 		log.Println("error parsing request form")
@@ -92,6 +87,17 @@ func (ct *Cloudtrax) handleAPRequest(w http.ResponseWriter, r *http.Request, _ h
 
 	request := models.NewAPRequest(&r.Form)
 	response := models.NewAPResponse(request)
+
+	data, derr := data.NewData(ct.Env)
+
+	if derr != nil {
+		log.Println("error creating data object")
+	} else {
+		derr = data.SaveAPRequest(*request, p.ByName("site"))
+		if derr != nil {
+			log.Printf("error saving to db:\n%s", derr.Error())
+		}
+	}
 
 	//Get the new response authorization
 	response.ResponseAuthorization, err = models.GenerateRA(response.ResponseCode,
@@ -127,6 +133,6 @@ func (ct *Cloudtrax) handleAPRequest(w http.ResponseWriter, r *http.Request, _ h
 }
 
 //NewCloudtrax initializes and returns a new cloudtrax object
-func NewCloudtrax(env *models.Environment) *Cloudtrax {
-	return &Cloudtrax{Env: env}
+func NewCloudtrax(env *models.Environment, data *data.Data) *Cloudtrax {
+	return &Cloudtrax{Env: env, Data: *data}
 }

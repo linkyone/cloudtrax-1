@@ -15,6 +15,7 @@ brevity.
 | `DATABASEURI` | YES | A complete and valid Postgres connection URI.         |
 | `SECRET`      | YES  | A salt used for communication with the APs.          |
 | `DEBUG`       | NO  | Default: `FALSE`, enables debug output. <sub>2</sub>  |
+| `MAXDBCONNECTIONS` | NO | Defaults to Heroku default, 7 |
 
 #### Environment Variable Notes:
 

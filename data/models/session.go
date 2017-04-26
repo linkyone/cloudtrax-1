@@ -14,5 +14,8 @@ type Session struct {
 	Node      string
 	IPv4      string
 	Device    string
+	Seconds   uint
+	Download  uint
+	Upload    uint
 	ExpiresAt time.Time
 }

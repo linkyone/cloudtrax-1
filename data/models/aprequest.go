@@ -23,6 +23,7 @@ type APRequest struct {
 	Session              string
 	Download             string
 	Upload               string
+	Seconds              string
 }
 
 //NewAPRequest takes a key/value pair array, and turns it into an APRequest
@@ -38,5 +39,6 @@ func NewAPRequest(v *url.Values) *APRequest {
 		Session:              v.Get("session"),
 		Download:             v.Get("download"),
 		Upload:               v.Get("upload"),
+		Seconds:              v.Get("seconds"),
 	}
 }
