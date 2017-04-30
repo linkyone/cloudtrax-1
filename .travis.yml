@@ -3,3 +3,6 @@ services:
 
 script:
   - docker build .
+
+after_success:
+  - docker push registry.heroku.com/$HEROKU_APP_NAME/web
