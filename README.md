@@ -1,3 +1,5 @@
+[![Build Status](https://travis-ci.org/ryanhatfield/cloudtrax.svg?branch=master)](https://travis-ci.org/ryanhatfield/cloudtrax)
+
 # Setup
 
 Everything in the server is configured with environment variables from the
