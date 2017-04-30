@@ -1,0 +1,4 @@
+language: go
+sudo: required
+services:
+- docker
